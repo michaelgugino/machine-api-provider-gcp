@@ -171,6 +171,14 @@
   revision = "5b532d6fd5efaf7fa130d4e859a2fde0fc3a9e1b"
 
 [[projects]]
+  digest = "1:e044b5990448842afba303d0691dcfbc6b736062c8a1c9ac96fb953040ffa1f8"
+  name = "github.com/golang/mock"
+  packages = ["gomock"]
+  pruneopts = "T"
+  revision = "937870445b8bddd7f05ea90e81c58ebe83681534"
+  version = "v1.3.0"
+
+[[projects]]
   digest = "1:c06028bbc52478d997bbc08facb0c315aabc2295094d7bf8833756aa9aa25504"
   name = "github.com/golang/protobuf"
   packages = [
@@ -762,6 +770,8 @@
   digest = "1:2549d4c0b2de15c9da9b0d9d2b28d29402fc95c71a1a3edb59a2f41ba4f660e3"
   name = "google.golang.org/api"
   packages = [
+    "cloudbilling/v1",
+    "cloudresourcemanager/v1",
     "compute/v1",
     "gensupport",
     "googleapi",
@@ -769,6 +779,7 @@
     "googleapi/transport",
     "internal",
     "option",
+    "servicemanagement/v1",
     "transport/http",
     "transport/http/internal/propagation",
   ]
@@ -854,6 +865,19 @@
   version = "v1.4.7"
 
 [[projects]]
+  digest = "1:75a94974604974eaf3f0611a0e4daaf8f5435ee50e4973eb550158dc9606482a"
+  name = "gopkg.in/gcfg.v1"
+  packages = [
+    ".",
+    "scanner",
+    "token",
+    "types",
+  ]
+  pruneopts = "T"
+  revision = "61b2c08bc8f6068f7c5ca684372f9a6cb1c45ebe"
+  version = "v1.2.3"
+
+[[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"
   name = "gopkg.in/inf.v0"
   packages = ["."]
@@ -868,6 +892,14 @@
   packages = ["."]
   pruneopts = "T"
   revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
+
+[[projects]]
+  digest = "1:78d374b493e747afa9fbb2119687e3740a7fb8d0ebabddfef0a012593aaecbb3"
+  name = "gopkg.in/warnings.v0"
+  packages = ["."]
+  pruneopts = "T"
+  revision = "ec4a0fea49c7b46c2aeb0b51aac55779c607e52b"
+  version = "v0.1.2"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -937,7 +969,6 @@
   digest = "1:6326c0acd4934569b53d305d4a79a30f7074b3d4fdb3537af06203b68297a22b"
   name = "k8s.io/apimachinery"
   packages = [
-    "pkg/api/equality",
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
@@ -1114,6 +1145,36 @@
   revision = "411b2483e5034420675ebcdd4a55fc76fe5e55cf"
 
 [[projects]]
+  digest = "1:0dd3be513e09375e3f8fefc718fdfc1aac6924dc57adecb6dddfc7edc96a8dda"
+  name = "sigs.k8s.io/cluster-api"
+  packages = [
+    "pkg/apis/cluster/common",
+    "pkg/apis/cluster/v1alpha1",
+    "pkg/cert",
+    "pkg/cmdrunner",
+    "pkg/errors",
+    "pkg/kubeadm",
+    "pkg/util",
+  ]
+  pruneopts = "T"
+  revision = "0f315e945d5fabe0c805ccf30fa6cf02fac6c0b5"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9b7a1f358e9950ef6445ea53ab424494324055f068afed75aac75978fdbc6f4f"
+  name = "sigs.k8s.io/cluster-api-provider-gcp"
+  packages = [
+    "pkg/apis/gceproviderconfig/v1alpha1",
+    "pkg/cloud/google",
+    "pkg/cloud/google/clients",
+    "pkg/cloud/google/clients/errors",
+    "pkg/cloud/google/config",
+    "pkg/cloud/google/machinesetup",
+  ]
+  pruneopts = "T"
+  revision = "b496566f4ac6b979efd7b27120534b8a0e3dde95"
+
+[[projects]]
   digest = "1:5aa50779f75cc439edd3455a6dee7cf179b52f8dde764a47cc929693485d1afb"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
@@ -1195,6 +1256,7 @@
   input-imports = [
     "github.com/emicklei/go-restful",
     "github.com/golang/glog",
+    "github.com/golang/mock/gomock",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "github.com/openshift/api/config/v1",
@@ -1207,23 +1269,26 @@
     "github.com/openshift/cluster-api/pkg/errors",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
+    "golang.org/x/oauth2",
+    "golang.org/x/oauth2/google",
     "google.golang.org/api/compute/v1",
     "gopkg.in/yaml.v2",
     "k8s.io/api/core/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
-    "k8s.io/apimachinery/pkg/api/equality",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/runtime/serializer",
-    "k8s.io/apimachinery/pkg/util/errors",
+    "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
-    "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/record",
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "k8s.io/klog",
+    "sigs.k8s.io/cluster-api-provider-gcp/pkg/cloud/google",
+    "sigs.k8s.io/cluster-api-provider-gcp/pkg/cloud/google/clients",
+    "sigs.k8s.io/cluster-api-provider-gcp/pkg/cloud/google/machinesetup",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
     "sigs.k8s.io/controller-runtime/pkg/client/fake",

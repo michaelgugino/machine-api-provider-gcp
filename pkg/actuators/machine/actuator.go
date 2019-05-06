@@ -21,7 +21,11 @@ import (
 	"fmt"
     "errors"
 //	"time"
+"io/ioutil"
+    "os"
     "strings"
+    "net/http"
+//    gcfg "gopkg.in/gcfg.v1"
 	corev1 "k8s.io/api/core/v1"
 //	"k8s.io/apimachinery/pkg/api/equality"
 //	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,17 +34,21 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 
+    "golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	clusterv1 "github.com/openshift/cluster-api/pkg/apis/cluster/v1alpha1"
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	//clustererror "github.com/openshift/cluster-api/pkg/controller/error"
 	apierrors "github.com/openshift/cluster-api/pkg/errors"
-	providerconfigv1 "github.com/openshift/machine-api-provider-gcp/pkg/apis/gcpproviderconfig/v1alpha1"
+	providerconfigv1 "github.com/openshift/machine-api-provider-gcp/pkg/apis/gceproviderconfig/v1alpha1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+    gcecloud_clients "sigs.k8s.io/cluster-api-provider-gcp/pkg/cloud/google/clients"
     compute "google.golang.org/api/compute/v1"
-    "github.com/openshift/cluster-api-provider-gcp/pkg/cloud/google/machinesetup"
-    gcecloud "github.com/openshift/cluster-api-provider-gcp/pkg/cloud/google"
+    "sigs.k8s.io/cluster-api-provider-gcp/pkg/cloud/google/machinesetup"
+    //capi_gcp "sigs.k8s.io/cluster-api-provider-gcp/pkg/cloud/google"
+    gcecloud "sigs.k8s.io/cluster-api-provider-gcp/pkg/cloud/google"
     "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -71,14 +79,14 @@ const (
 // Actuator is the GCP-specific actuator for the Cluster API machine controller
 type Actuator struct {
 	client             client.Client
-	codec              *providerconfigv1.GCPProviderConfigCodec
+	codec              *providerconfigv1.GCEProviderConfigCodec
 	eventRecorder      record.EventRecorder
 }
 
 // ActuatorParams holds parameter information for Actuator
 type ActuatorParams struct {
 	Client           client.Client
-	Codec            *providerconfigv1.GCPProviderConfigCodec
+	Codec            *providerconfigv1.GCEProviderConfigCodec
 	EventRecorder    record.EventRecorder
 }
 
@@ -108,6 +116,107 @@ func (a *Actuator) handleMachineError(machine *machinev1.Machine, err *apierrors
 
 	klog.Errorf("Machine error: %v", err.Message)
 	return err
+}
+
+func instanceList(computeService gcecloud.GCEClientComputeService) bool {
+	//cv-ig-m-6xbt
+	//gce.ComputeService.service.Instances.List("openshift-gce-devel", "us-east1-c")
+	//ins := c.service.Instances.Get(project, zone, instance).Do()
+	//doCall(gce.ComputeService.service)
+	x, _ := computeService.InstancesGet("openshift-gce-devel", "us-east1-c", "cv-ig-m-6xbt")
+	klog.Infof("x: %v", x)
+	return true
+}
+
+func getClientJWT(data []byte) (*http.Client, error) {
+	conf, err := google.JWTConfigFromJSON(data, "https://www.googleapis.com/auth/compute")
+	if err != nil {
+		return nil, err
+	}
+	gclient := conf.Client(oauth2.NoContext)
+	//service, err := compute.New(client)
+	//computeService, err := gcecloud_clients.NewComputeService(client)
+	return gclient, nil
+}
+
+func getSecretJWT(credentialsSecretName string, namespace string) ([]byte, error) {
+    data, err := ioutil.ReadFile("/home/mgugino/clouds/aos-serviceaccount.json")
+    return data, err
+    /*
+    // TODO(michaelgugino) Need to scrape project from either the json data or
+    // have it placed into the secret.
+    var secret corev1.Secret
+    if err := a.client.Get(context.Background(), client.ObjectKey{Namespace: namespace, Name: credentialsSecretName}, &secret); err != nil {
+        return nil, err
+    }
+    */
+}
+
+func serviceFromDefaultClient() (gcecloud.GCEClientComputeService, error) {
+    gclient, err := google.DefaultClient(context.TODO(), compute.ComputeScope)
+    if err != nil {
+        klog.Error("Unable to get default client, cannot continue")
+        return nil, err
+    }
+    computeService, err := gcecloud_clients.NewComputeService(gclient)
+	if err != nil {
+        klog.Error("Unable to get compute service with default client, cannot continue")
+		return nil, err
+	}
+	return computeService, nil
+}
+
+func serviceFromJWTSecret(credentialsSecretName string, namespace string) (gcecloud.GCEClientComputeService, error) {
+    var gclient *http.Client
+    if credentialsSecretName != "" {
+        data, err := getSecretJWT(credentialsSecretName, namespace)
+        if err != nil {
+            klog.Fatalf("Unable to get secret data")
+        }
+        gclient, err = getClientJWT(data)
+        if err != nil {
+            klog.Errorf("Error creating an jwt auth client: %q", err)
+            return nil, err
+        }
+    } else {
+        klog.Error("No credenital Secret defined, unable to create client")
+        return nil, errors.New("Unable to get a client, secret undefined")
+    }
+    computeService, err := gcecloud_clients.NewComputeService(gclient)
+	if err != nil {
+        klog.Error("Unable to get compute service with jwt client, cannot continue")
+		return nil, err
+	}
+	return computeService, nil
+}
+
+func (a *Actuator) MockCreateMachine(machine *machinev1.Machine) error {
+    machineProviderConfig, err := providerConfigFromMachine(machine, a.codec)
+	if err != nil {
+		//return nil, a.handleMachineError(machine, apierrors.InvalidMachineConfiguration("error decoding MachineProviderConfig: %v", err), createEventAction)
+        return err
+	}
+
+	credentialsSecretName := ""
+	if machineProviderConfig.CredentialsSecret != nil {
+		credentialsSecretName = machineProviderConfig.CredentialsSecret.Name
+	}
+
+    var computeService gcecloud.GCEClientComputeService
+    // Get client using service account json file, if GOOGLE_APPLICATION_CREDENTIALS is set.
+    gcredsPath, ok := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
+    if ok && gcredsPath != "" {
+        computeService, err = serviceFromDefaultClient()
+        if err != nil {
+            return err
+        }
+    } else {
+        computeService, err = serviceFromJWTSecret(credentialsSecretName, machine.Namespace)
+    }
+    instanceList(computeService)
+
+	//awsClient, err := a.awsClientBuilder(a.client, credentialsSecretName, machine.Namespace, machineProviderConfig.Placement.Region)
+    return nil
 }
 
 // Create runs a new GCP instance
@@ -469,7 +578,7 @@ func (a *Actuator) getMachineInstances(cluster *clusterv1.Cluster, machine *mach
 
 /*
 // updateLoadBalancers adds a given machine instance to the load balancers specified in its provider config
-func (a *Actuator) updateLoadBalancers(client awsclient.Client, providerConfig *providerconfigv1.GCPMachineProviderConfig, instance *compute.Instance) error {
+func (a *Actuator) updateLoadBalancers(client awsclient.Client, providerConfig *providerconfigv1.GCEMachineProviderConfig, instance *compute.Instance) error {
 	if len(providerConfig.LoadBalancers) == 0 {
 		klog.V(4).Infof("Instance %q has no load balancers configured. Skipping", *instance.InstanceId)
 		return nil

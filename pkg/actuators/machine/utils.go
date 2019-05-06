@@ -6,18 +6,18 @@ import (
     "k8s.io/klog"
     corev1 "k8s.io/api/core/v1"
 	machinev1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
-	providerconfigv1 "github.com/openshift/machine-api-provider-gcp/pkg/apis/gcpproviderconfig/v1alpha1"
+	providerconfigv1 "github.com/openshift/machine-api-provider-gcp/pkg/apis/gceproviderconfig/v1alpha1"
     "k8s.io/apimachinery/pkg/types"
 )
 
 // providerConfigFromMachine gets the machine provider config MachineSetSpec from the
 // specified cluster-api MachineSpec.
-func providerConfigFromMachine(machine *machinev1.Machine, codec *providerconfigv1.GCPProviderConfigCodec) (*providerconfigv1.GCPMachineProviderConfig, error) {
+func providerConfigFromMachine(machine *machinev1.Machine, codec *providerconfigv1.GCEProviderConfigCodec) (*providerconfigv1.GCEMachineProviderSpec, error) {
 	if machine.Spec.ProviderSpec.Value == nil {
 		return nil, fmt.Errorf("unable to find machine provider config: Spec.ProviderSpec.Value is not set")
 	}
 
-	var config providerconfigv1.GCPMachineProviderConfig
+	var config providerconfigv1.GCEMachineProviderSpec
 	if err := codec.DecodeProviderSpec(&machine.Spec.ProviderSpec, &config); err != nil {
 		return nil, err
 	}

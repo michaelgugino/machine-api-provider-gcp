@@ -92,8 +92,8 @@ type GCPMachineProviderConfig struct {
 	// AMI is the reference to the AMI from which to create the machine instance.
 	//AMI GCPResourceReference `json:"ami"`
 
-	// InstanceType is the type of instance to create. Example: m4.xlarge
-	InstanceType string `json:"instanceType"`
+	// InstanceType is the type of machine to create. Example: n1-standard-1
+	MachineType string `json:"machinetype"`
 
 	// Tags is the set of tags to add to apply to an instance, in addition to the ones
 	// added by default by the actuator. These tags are additive. The actuator will ensure
@@ -108,15 +108,6 @@ type GCPMachineProviderConfig struct {
 	// CredentialsSecret is a reference to the secret with GCP credentials. Otherwise, defaults to permissions
 	// provided by attached IAM role where the actuator is running.
 	CredentialsSecret *corev1.LocalObjectReference `json:"credentialsSecret,omitempty"`
-
-	// KeyName is the name of the KeyPair to use for SSH
-	KeyName *string `json:"keyName,omitempty"`
-
-	// DeviceIndex is the index of the device on the instance for the network interface attachment.
-	// Defaults to 0.
-	DeviceIndex int64 `json:"deviceIndex"`
-
-
 }
 
 func init() {

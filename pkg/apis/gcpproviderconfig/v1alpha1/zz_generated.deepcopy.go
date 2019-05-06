@@ -48,7 +48,6 @@ func (in *GCPMachineProviderConfig) DeepCopyInto(out *GCPMachineProviderConfig) 
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
-
 	if in.UserDataSecret != nil {
 		in, out := &in.UserDataSecret, &out.UserDataSecret
 		*out = new(v1.LocalObjectReference)
@@ -59,12 +58,6 @@ func (in *GCPMachineProviderConfig) DeepCopyInto(out *GCPMachineProviderConfig) 
 		*out = new(v1.LocalObjectReference)
 		**out = **in
 	}
-	if in.KeyName != nil {
-		in, out := &in.KeyName, &out.KeyName
-		*out = new(string)
-		**out = **in
-	}
-
 	return
 }
 
