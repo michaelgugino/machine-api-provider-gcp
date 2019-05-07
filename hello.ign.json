@@ -1,0 +1,35 @@
+{
+    "ignition": {
+        "config": {},
+        "security": {
+            "tls": {}
+        },
+        "timeouts": {},
+        "version": "2.2.0"
+    },
+    "networkd": {},
+    "passwd": {
+        "users": [
+            {
+                "name": "core",
+                "sshAuthorizedKeys": [
+                    "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDL5/TfQpp2kEUmhpPWRCuHDPOMxuQLdwTlK9TiiLWzHSCRVSET6vwhg8Vrph5SxgsGR9rC+KQkAfNLyS800RmG+svxaCJSNFRzweK5kC9kj4KalxbiYKANfQbKMk8iehQ76GBa6WCYc+GAaOBnVxFaqQ0AuvIeyyRGTPsjaqslHujEijCfyhWWOtMa0v5i4GyY0T0Rvi+sF0f7p6IEkH8rgdMwFju7wVisrSGKRBN3KR/cr7lI/oKPfN6ApSNPuSo2TIWyUfy3P+y2njwG+3DuaQTUM2W2M7dXeosZ2dCYtzV3EeeXk6aZhIfrTgi+ckGC73onhvb5D6ob+3Iu5U8T4eG3HewwlcohMvPS8Syi6GM+Nh7EjrO8TXJACKUfaDDQTlHoPc5Ws52dt1UBd067XEN6IQxKlM2qTqy9B4tFag5veMK70sSQqrMI4RGKRwwdN+KWPqcupX2F81uR12zNCc7RjuGi4ofI6hI8yw89KYMVsKqrRz3xTz9LyXlaxuXFfvIK+I9Q13OC/6AahX7bdvLpK7KvIuaxFt7jUExzpHtcztJ1KDEUYpuMhRFsor0PH+KlkLsTqhvKRA5W0/pCUqmjmsRuenG6dZwkKHZs54KEGmq0KOhShuBwd/2dOeIZH9JENgUdy5x9hEzJoEhOpWXQVjc8UC6xq0H3VGO59Q== mgugino@redhat.com",
+                    "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC2PAkBKhkvrTP4sbVYWa/6opLzqOHXKAC1FToelR398LVGNOVY2nFumXdrD9yGspYcvI90OrJYVViWgIa5lyKPGmnaYY4QMyStxVk+RqAuBP1kdNmlBHHF/ATvJKniLKJffalBXRmwJTcsw8OW5VEHOlgBqPaB2weWGzvijCckHFE4mPNWKoyi7rDVFZxRBKSq0M6G96doq9GBL5/fX1tqfipDTMd7iHo/BF4dw+fahEFLgo7bng5omY3bF6YvstOmOgl9H4c0FKV7qW3ArWIaUfObrHUMv1yAFMmoPRJkTf6bhKBjBZRNkTJQEkYmtxC4eed6TF/983P5/Rv4Qk23 mgugino@mguginop50"
+                ]
+            }
+        ]
+    },
+    "storage": {
+        "files": [
+            {
+                "contents": {
+                    "source": "data:text/plain;charset=utf-8;base64,aGVsbG8gZnJvbSBpZ25pdGlvbiEK",
+                    "verification": {}
+                },
+                "filesystem": "root",
+                "mode": 384,
+                "path": "/hello"
+            }
+        ]
+    }
+}

@@ -221,19 +221,19 @@ func (a *Actuator) MockCreateMachine(machine *machinev1.Machine) error {
 
 // Create runs a new GCP instance
 func (a *Actuator) Create(context context.Context, cluster *clusterv1.Cluster, machine *machinev1.Machine) error {
+	/*
 	klog.Info("creating machine")
-    /*
 	instance, err := a.CreateMachine(cluster, machine)
 	if err != nil {
 		klog.Errorf("error creating machine: %v", err)
-		updateConditionError := a.updateMachineProviderConditions(machine, providerconfigv1.MachineCreation, MachineCreationFailed, err.Error())
+		// updateConditionError := a.updateMachineProviderConditions(machine, providerconfigv1.MachineCreation, MachineCreationFailed, err.Error())
 		if updateConditionError != nil {
 			klog.Errorf("error updating machine conditions: %v", updateConditionError)
 		}
 		return err
 	}
-	// return a.updateStatus(machine, instance)
-    */
+	return a.updateStatus(machine, instance)
+	*/
     return errors.New("Not Implemented")
 
 }
@@ -650,25 +650,7 @@ type GCEClient struct {
 	scheme                   *runtime.Scheme
 }
 
-func newDisks2() []*compute.AttachedDisk{
-	var disks []*compute.AttachedDisk
-	//for idx, disk := range config.Disks {
-	//diskSizeGb := disk.InitializeParams.DiskSizeGb
-	d := compute.AttachedDisk{
-		AutoDelete: true,
-		InitializeParams: &compute.AttachedDiskInitializeParams{
-			DiskSizeGb: 30,
-			DiskType:   fmt.Sprintf("zones/%s/diskTypes/%s", "us-east1-c", "pd-ssd"),
-		},
-	}
-	d.InitializeParams.SourceImage = "projects/debian-cloud/global/images/debian-9-stretch-v20190423"
-	d.Boot = true
-	disks = append(disks, &d)
-
-	return disks
-}
-
-func (gce *GCEClient) getMetadata2() (*compute.Metadata, error) {
+func getMetadata2() (*compute.Metadata, error) {
 	metadataMap := make(map[string]string)
 	{
 		var b strings.Builder
@@ -688,7 +670,13 @@ func (gce *GCEClient) getMetadata2() (*compute.Metadata, error) {
 		fmt.Fprintf(&b, "node-tags = %s\n", nodeTag)
 		metadataMap["cloud-config"] = b.String()
 	}
+	udata, err := ioutil.ReadFile("/home/mgugino/go/src/github.com/openshift/machine-api-provider-gcp/hello.ign.json")
+	if err != nil {
+		return nil, err
+	}
 
+	metadataMap["user-data"] = string(udata)
+	klog.Errorf("user-data: %s", metadataMap["user-data"])
 	var metadataItems []*compute.MetadataItems
 	for k, v := range metadataMap {
 		v := v // rebind scope to avoid loop aliasing below
@@ -701,4 +689,84 @@ func (gce *GCEClient) getMetadata2() (*compute.Metadata, error) {
 		Items: metadataItems,
 	}
 	return &metadata, nil
+}
+
+//func (gce *GCEClient) Create2(_ context.Context, clusterConfig *gceconfigv1.GCEClusterProviderSpec, machineConfig *gceconfigv1.GCEMachineProviderSpec) error {
+func Create2(computeService gcecloud.GCEClientComputeService) error {
+
+	//imagePath := gce.getImagePath("notfound")
+	metadata, err := getMetadata2()
+	if err != nil {
+		return err
+	}
+
+	var instance *compute.Instance
+
+	name := "mgugino-test"
+	project := "openshift-gce-devel"
+	zone := "us-east1-c"
+	machinetype := "n1-standard-1"
+
+	if instance == nil {
+		labels := map[string]string{}
+		labels[BootstrapLabelKey] = "true"
+
+		op, err := computeService.InstancesInsert(project, zone, &compute.Instance{
+			Name:         name,
+			MachineType:  fmt.Sprintf("zones/%s/machineTypes/%s", zone, machinetype),
+			CanIpForward: true,
+			NetworkInterfaces: []*compute.NetworkInterface{
+				{
+					Network: "global/networks/default",
+					AccessConfigs: []*compute.AccessConfig{
+						{
+							Type: "ONE_TO_ONE_NAT",
+							Name: "External NAT",
+						},
+					},
+				},
+			},
+			//Disks:    newDisks(machineConfig, zone, imagePath, int64(30)),
+			Disks: newDisks2(),
+			Metadata: metadata,
+			Tags: &compute.Tags{
+				Items: []string{
+					"https-server",
+					fmt.Sprintf("%s-worker", "mgdev")},
+			},
+			Labels: labels,
+		})
+
+		if err == nil {
+			err = computeService.WaitForOperation(project, op)
+		}
+
+		if err != nil {
+			klog.Errorf("Machine error: %v", err)
+			return err
+		}
+
+	} else {
+		klog.Infof("Skipped creating a VM that already exists.\n")
+	}
+
+	return nil
+}
+
+func newDisks2() []*compute.AttachedDisk{
+	var disks []*compute.AttachedDisk
+	//for idx, disk := range config.Disks {
+	//diskSizeGb := disk.InitializeParams.DiskSizeGb
+	d := compute.AttachedDisk{
+		AutoDelete: true,
+		InitializeParams: &compute.AttachedDiskInitializeParams{
+			DiskSizeGb: 30,
+			DiskType:   fmt.Sprintf("zones/%s/diskTypes/%s", "us-east1-c", "pd-ssd"),
+		},
+	}
+	d.InitializeParams.SourceImage = "projects/coreos-cloud/global/images/coreos-stable-2079-3-0-v20190423"
+	d.Boot = true
+	disks = append(disks, &d)
+
+	return disks
 }

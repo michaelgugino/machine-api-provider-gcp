@@ -40,6 +40,8 @@ func TestCreateActuator(t *testing.T) {
 		t.Fatalf("Unable to get compute service")
 	}
 	_ = instanceList(service)
+	_, _ = getMetadata2()
+	_ = Create2(service)
 }
 
 /*
